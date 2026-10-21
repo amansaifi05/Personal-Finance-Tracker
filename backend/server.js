@@ -7,10 +7,23 @@ const { errorHandler } = require('./middleware/errorMiddleware');
 require('dotenv').config();
 
 const app = express();
+const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:3000')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use(cors({
+  origin(origin, callback) {
+    // Requests without an Origin header are useful for health checks and tools.
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('CORS origin is not allowed'));
+  },
+  credentials: true,
+}));
 
 app.use(express.json());
 
@@ -32,13 +45,20 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log('✅ MongoDB connected');
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-  })
-  .catch((err) => {
-    console.error('❌ MongoDB connection failed:', err.message);
-    process.exit(1);
-  });
+const databaseConnection = mongoose.connect(process.env.MONGO_URI);
+
+databaseConnection
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch((err) => console.error('❌ MongoDB connection failed:', err.message));
+
+// Local Node.js development starts a listener. Vercel imports this Express app
+// as a serverless function instead, so it must not open its own port there.
+if (require.main === module) {
+  databaseConnection
+    .then(() => {
+      app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    })
+    .catch(() => process.exit(1));
+}
+
+module.exports = app;

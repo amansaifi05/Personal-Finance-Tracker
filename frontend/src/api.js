@@ -2,8 +2,10 @@
 
 import axios from 'axios';
 
-// Base URL for our backend
-const BASE_URL = 'http://localhost:5000/api';
+// In production, React reads this value at build time from Vercel's
+// REACT_APP_API_URL environment variable. Local development keeps using the
+// local Express server when the variable is not set.
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 // ─── Helper: get auth headers ──────────────────────────────────────────────
 // Reads the JWT from localStorage and puts it in the Authorization header

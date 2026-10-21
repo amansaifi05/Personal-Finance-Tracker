@@ -95,6 +95,17 @@ All transaction, category, and analytics endpoints require an `Authorization: Be
 
 Never commit `backend/.env`: it contains the database connection string and JWT secret. Use `.env.example` as the safe template for collaborators.
 
+## Deploy to Vercel
+
+Deploy the frontend and backend as separate Vercel projects from this repository:
+
+1. Create a MongoDB Atlas cluster and database user, then copy its Node.js connection string.
+2. Import this repository in Vercel for the API with `backend` as the **Root Directory**. Add `MONGO_URI`, `JWT_SECRET`, and `CLIENT_ORIGIN` as environment variables.
+3. Import the repository a second time for the web app with `frontend` as the **Root Directory**. Add `REACT_APP_API_URL` with the value `https://your-api.vercel.app/api`.
+4. Set the backend's `CLIENT_ORIGIN` to the deployed frontend address, then redeploy the backend.
+
+Use the production values for all environment variables. `REACT_APP_API_URL` is compiled into the React build, while `MONGO_URI` and `JWT_SECRET` must remain private backend variables.
+
 ## License
 
 This project is available under the [MIT License](LICENSE).
